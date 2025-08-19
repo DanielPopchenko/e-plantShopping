@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './ProductList.css';
 import CartItem from './CartItem';
 import { useDispatch, useSelector } from 'react-redux';
@@ -7,7 +7,8 @@ import { addItem } from './CartSlice';
 function ProductList({ onHomeClick }) {
 	const [showCart, setShowCart] = useState(false);
 	const [showPlants, setShowPlants] = useState(false); // State to control the visibility of the About Us page
-	const [addedToCart, setAddedToCart] = useState({}); // State to control the visibility of the About Us page
+	const [addedToCart, setAddedToCart] = useState([]);
+	// State to control the visibility of the About Us page
 
 	const dispatch = useDispatch();
 
@@ -16,12 +17,13 @@ function ProductList({ onHomeClick }) {
 
 	const handleAddToCart = product => {
 		dispatch(addItem(product)); // Dispatch the action to add the product to the cart (Redux action)
-		setAddedToCart(prevState => ({
-			// Update the local state to reflect that the product has been added
-			...prevState, // Spread the previous state to retain existing entries
-			[product.name]: true, // Set the current product's name as a key with value 'true' to mark it as added
-		}));
+		setAddedToCart(prevState => [...prevState, product.name]);
+		setShowCart(true);
 	};
+
+	useEffect(() => {
+		setAddedToCart(state.map(item => item.name));
+	}, [state]);
 
 	const plantsArray = [
 		{
@@ -279,6 +281,8 @@ function ProductList({ onHomeClick }) {
 		justifyContent: 'space-between',
 		alignItems: 'center',
 		width: '1100px',
+		position: 'relative',
+		zIndex: '1000',
 	};
 	const styleA = {
 		color: 'white',
@@ -286,9 +290,21 @@ function ProductList({ onHomeClick }) {
 		textDecoration: 'none',
 	};
 
+	const cartSpan = {
+		zIndex: 999,
+		position: 'absolute',
+		right: '27px',
+		bottom: '22px',
+		fontSize: '23px',
+	};
+
 	const handleHomeClick = e => {
 		e.preventDefault();
 		onHomeClick();
+	};
+
+	const handleCheckoutShopping = e => {
+		alert('Functionality to be added for future reference');
 	};
 
 	const handleCartClick = e => {
@@ -332,6 +348,7 @@ function ProductList({ onHomeClick }) {
 					<div>
 						{' '}
 						<a href='#' onClick={e => handleCartClick(e)} style={styleA}>
+							{state.length > 0 && <span style={cartSpan}>{state.length}</span>}
 							<h1 className='cart'>
 								<svg
 									xmlns='http://www.w3.org/2000/svg'
@@ -399,7 +416,13 @@ function ProductList({ onHomeClick }) {
 												{/* Display plant cost */}
 												<button
 													className='product-button'
+													style={{
+														backgroundColor: addedToCart.includes(plant.name)
+															? 'gray'
+															: 'green',
+													}}
 													onClick={() => handleAddToCart(plant)} // Handle adding plant to cart
+													disabled={addedToCart.includes(plant.name)}
 												>
 													Add to Cart
 												</button>
@@ -412,7 +435,10 @@ function ProductList({ onHomeClick }) {
 					)}
 				</div>
 			) : (
-				<CartItem onContinueShopping={handleContinueShopping} />
+				<CartItem
+					onContinueShopping={handleContinueShopping}
+					onCheckoutShopping={handleCheckoutShopping}
+				/>
 			)}
 		</div>
 	);
